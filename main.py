@@ -71,7 +71,8 @@ async def on_ready():
 
 @bot.tree.command(name="comprar", description="Gera um pagamento Pix para adquirir o acesso VIP.")
 async def comprar(interaction: discord.Interaction):
-    WEBHOOK_URL = "https://neoBot.up.railway.app/webhook/mercadopago" # Lembre-se de colocar sua URL aqui
+    # URL FINAL E DEFINITIVA DO RAILWAY
+    WEBHOOK_URL = "https://neobot-production-c444.up.railway.app/webhook/mercadopago"
     
     payload = {
         "transaction_amount": 1.00, "description": "Acesso VIP no Servidor", "payment_method_id": "pix",
@@ -85,9 +86,9 @@ async def comprar(interaction: discord.Interaction):
     response = requests.post("https://api.mercadopago.com/v1/payments", data=json.dumps(payload), headers=headers)
     if response.status_code == 201:
         data = response.json()
-        qr_code_base64 = data['point_of_interaction']['transaction_data']['qr_code_base64']
+        qr_code_base_64 = data['point_of_interaction']['transaction_data']['qr_code_base64']
         qr_code_text = data['point_of_interaction']['transaction_data']['qr_code']
-        image_data = base64.b64decode(qr_code_base64)
+        image_data = base64.b64decode(qr_code_base_64)
         image_file = io.BytesIO(image_data)
         discord_file = discord.File(fp=image_file, filename="qr_code.png")
         embed = discord.Embed(title="✨ Pagamento VIP via Pix", description="Para concluir a compra, escaneie o QR Code abaixo com o app do seu banco ou use o 'Copia e Cola'.", color=0x3498db)
