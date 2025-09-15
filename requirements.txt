@@ -1,0 +1,5 @@
+discord.py
+requests
+Flask
+python-dotenv
+hypercorn
