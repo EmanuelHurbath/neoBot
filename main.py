@@ -71,7 +71,7 @@ async def on_ready():
 
 @bot.tree.command(name="comprar", description="Gera um pagamento Pix para adquirir o acesso VIP.")
 async def comprar(interaction: discord.Interaction):
-    WEBHOOK_URL = "https://SUA-URL-DO-RAILWAY.up.railway.app/webhook/mercadopago" # Lembre-se de colocar sua URL aqui
+    WEBHOOK_URL = "https://neoBot.up.railway.app/webhook/mercadopago" # Lembre-se de colocar sua URL aqui
     
     payload = {
         "transaction_amount": 1.00, "description": "Acesso VIP no Servidor", "payment_method_id": "pix",
@@ -99,22 +99,35 @@ async def comprar(interaction: discord.Interaction):
         print("Erro na API do Mercado Pago:", response.text)
         await interaction.response.send_message("❌ Desculpe, ocorreu um erro ao gerar seu pagamento. Tente novamente mais tarde.", ephemeral=True)
 
-# --- INICIALIZAÇÃO CORRIGIDA ---
+# --- INICIALIZAÇÃO DE DEBUG ---
 async def main():
+    print("[DEBUG] Etapa 1: Função main iniciada.")
     if not TOKEN_DISCORD:
-        print("ERRO: TOKEN_DISCORD não encontrado nas Variables!")
+        print("[ERRO FATAL] TOKEN_DISCORD não encontrado nas Variables! Parando.")
         return
 
-    # Configura o servidor web
+    print("[DEBUG] Etapa 2: TOKEN_DISCORD encontrado.")
+    
     port = int(os.environ.get("PORT", 8080))
     config = Config()
     config.bind = [f"0.0.0.0:{port}"]
+    print(f"[DEBUG] Etapa 3: Servidor web configurado para rodar na porta {port}.")
     
-    # Roda o bot e o servidor web ao mesmo tempo
-    await asyncio.gather(
-        bot.start(TOKEN_DISCORD),
-        serve(app, config)
-    )
+    print("[DEBUG] Etapa 4: Preparando para iniciar bot.start e serve com asyncio.gather.")
+    try:
+        # Roda o bot e o servidor web ao mesmo tempo
+        await asyncio.gather(
+            bot.start(TOKEN_DISCORD),
+            serve(app, config)
+        )
+    except discord.errors.LoginFailure:
+        print("[ERRO FATAL] Falha no login. O TOKEN_DISCORD está incorreto ou foi revogado.")
+    except Exception as e:
+        print(f"[ERRO FATAL] Uma exceção ocorreu durante o asyncio.gather: {e}")
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    print("[DEBUG] Ponto de entrada: Bloco __main__ executado.")
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"[ERRO FATAL] Uma exceção geral foi capturada no __main__: {e}")
