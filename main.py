@@ -9,7 +9,6 @@ import asyncio
 import uuid
 import base64
 import io
-# Importações do servidor web
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
@@ -72,24 +71,18 @@ async def on_ready():
 
 @bot.tree.command(name="comprar", description="Gera um pagamento Pix para adquirir o acesso VIP.")
 async def comprar(interaction: discord.Interaction):
-    # !!! ATENÇÃO: SUBSTITUA PELA SUA NOVA URL DO RAILWAY !!!
-    WEBHOOK_URL = "https://SUA-NOVA-URL.up.railway.app/webhook/mercadopago"
+    WEBHOOK_URL = "https://SUA-URL-DO-RAILWAY.up.railway.app/webhook/mercadopago" # Lembre-se de colocar sua URL aqui
     
     payload = {
-        "transaction_amount": 1.00,
-        "description": "Acesso VIP no Servidor",
-        "payment_method_id": "pix",
-        "notification_url": WEBHOOK_URL,
-        "external_reference": str(interaction.user.id),
+        "transaction_amount": 1.00, "description": "Acesso VIP no Servidor", "payment_method_id": "pix",
+        "notification_url": WEBHOOK_URL, "external_reference": str(interaction.user.id),
         "payer": {"email": f"{interaction.user.id}@discord.com", "first_name": interaction.user.name}
     }
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN_MERCADO_PAGO}",
-        "Content-Type": "application/json",
+        "Authorization": f"Bearer {ACCESS_TOKEN_MERCADO_PAGO}", "Content-Type": "application/json",
         "X-Idempotency-Key": str(uuid.uuid4())
     }
     response = requests.post("https://api.mercadopago.com/v1/payments", data=json.dumps(payload), headers=headers)
-
     if response.status_code == 201:
         data = response.json()
         qr_code_base64 = data['point_of_interaction']['transaction_data']['qr_code_base64']
@@ -106,20 +99,22 @@ async def comprar(interaction: discord.Interaction):
         print("Erro na API do Mercado Pago:", response.text)
         await interaction.response.send_message("❌ Desculpe, ocorreu um erro ao gerar seu pagamento. Tente novamente mais tarde.", ephemeral=True)
 
-# --- INICIALIZAÇÃO ROBUSTA ---
+# --- INICIALIZAÇÃO CORRIGIDA ---
 async def main():
-    # Configura o servidor web para rodar na porta que o Railway fornecer
+    if not TOKEN_DISCORD:
+        print("ERRO: TOKEN_DISCORD não encontrado nas Variables!")
+        return
+
+    # Configura o servidor web
     port = int(os.environ.get("PORT", 8080))
     config = Config()
     config.bind = [f"0.0.0.0:{port}"]
-    server_task = asyncio.create_task(serve(app, config))
     
-    # Inicia o bot do Discord
-    if TOKEN_DISCORD:
-        await bot.start(TOKEN_DISCORD)
-    else:
-        print("ERRO: TOKEN_DISCORD não encontrado nos Secrets!")
+    # Roda o bot e o servidor web ao mesmo tempo
+    await asyncio.gather(
+        bot.start(TOKEN_DISCORD),
+        serve(app, config)
+    )
 
 if __name__ == '__main__':
-    # Roda a função principal que gerencia o bot e o servidor
     asyncio.run(main())
